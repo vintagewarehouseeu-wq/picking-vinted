@@ -1,0 +1,12 @@
+# Ne JAMAIS publier ces fichiers (ils contiennent des accès / des données)
+token.json
+.streamlit/secrets.toml
+SECRETS_A_COLLER.toml
+
+# Généré / éphémère
+__pycache__/
+*.pyc
+bordereaux/
+inventaire/
+catalog_cache.json
+shipped.json
