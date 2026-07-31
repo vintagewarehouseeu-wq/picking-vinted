@@ -14,9 +14,10 @@ FOLDER = "VJS_Picking"
 
 
 def _secrets():
+    """Renvoie les secrets en dict simple, ou {} si aucun fichier secrets (mode local)."""
     try:
         import streamlit as st
-        return st.secrets
+        return dict(st.secrets)   # déclenche le parse ; lève si pas de secrets.toml
     except Exception:
         return {}
 
