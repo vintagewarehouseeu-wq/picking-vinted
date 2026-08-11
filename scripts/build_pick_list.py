@@ -322,10 +322,14 @@ def gmail_picks(days: int = 3, master=None):
         return [], [], 0
 
     picks, problems = [], []
+    lot_covers = []  # mails "Lot N articles" : la photo de couverture Vinted du lot
 
-    # 1) ventes individuelles (on saute les "Lot N articles" : traités via les bordereaux)
+    # 1) ventes individuelles (les "Lot N articles" servent juste de photo de couverture)
     for v in gmail_vendus(days):
-        if LOT_VENTE_RE.match(v["title"]):
+        mlot = LOT_VENTE_RE.match(v["title"])
+        if mlot:
+            n = int(re.search(r"\d+", v["title"]).group())
+            lot_covers.append({"n": n, "photo": v.get("photo", ""), "ts": v.get("ts", 0)})
             continue
         rec = match_one(master, v["title"])
         if rec:
@@ -342,11 +346,15 @@ def gmail_picks(days: int = 3, master=None):
         if len(frags) >= 2:
             # LOT : un bordereau → plusieurs articles, même n°, PDF partagé, box de chacun
             lot_no += 1
+            # photo de couverture = mail "Lot N articles" avec N == nb d'articles (le + proche en date)
+            cands = [c for c in lot_covers if c["n"] == len(frags) and c["photo"]]
+            cands.sort(key=lambda c: abs(c["ts"] - b["ts"]))
+            cover = cands[0]["photo"] if cands else ""
             for i, frag in enumerate(frags):
                 rec = match_one(master, frag)
                 base = dict(rec) if rec else {"box": None, "vjs": "", "taille": "", "marque": "", "photo": ""}
-                picks.append({**base, "id": f"{b['id']}_{i}", "ts": b["ts"],
-                              "titre": frag, "bordereau": b["pdf"], "lot": lot_no})
+                picks.append({**base, "id": f"{b['id']}_{i}", "ts": b["ts"], "titre": frag,
+                              "bordereau": b["pdf"], "lot": lot_no, "photo": cover})
         else:
             # bordereau simple : rattache le PDF au pick dont le titre est dans le bordereau
             npour = _norm(b["pour"])

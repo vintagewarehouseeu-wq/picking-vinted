@@ -10,12 +10,6 @@ from pathlib import Path
 
 import streamlit as st
 
-
-def thumb(url: str) -> str:
-    """Convertit une URL Drive (lh3…/d/ID) en endpoint thumbnail (rend une vraie image)."""
-    m = re.search(r"/d/([\w-]+)", url or "")
-    return f"https://drive.google.com/thumbnail?id={m.group(1)}&sz=w200" if m else url
-
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "scripts"))
 import build_pick_list as B  # noqa: E402
@@ -146,9 +140,13 @@ def unmark_shipped(pid: str):
 
 
 def _photo(col, p):
-    if p.get("photo") and "vinted.net" in p["photo"]:
-        col.markdown(f'<img src="{p["photo"]}" width="64" style="border-radius:8px;object-fit:cover">',
-                     unsafe_allow_html=True)
+    """Vignette Vinted cliquable (→ photo en grand). Sinon 👕 (article non catalogué)."""
+    url = p.get("photo") or ""
+    if "vinted.net" in url:
+        col.markdown(
+            f'<a href="{url}" target="_blank" title="Voir en grand">'
+            f'<img src="{url}" width="64" style="border-radius:8px;object-fit:cover"></a>',
+            unsafe_allow_html=True)
     else:
         col.markdown("<div style='font-size:28px;text-align:center'>👕</div>", unsafe_allow_html=True)
 
