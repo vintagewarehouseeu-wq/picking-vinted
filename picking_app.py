@@ -153,6 +153,15 @@ def _photo(col, p):
         col.markdown("<div style='font-size:28px;text-align:center'>👕</div>", unsafe_allow_html=True)
 
 
+def _lot_badge(p) -> str:
+    """Badge ⭐ LOT n : les articles d'un même lot partent ensemble avec UN seul bordereau."""
+    lot = p.get("lot")
+    if not lot:
+        return ""
+    return (f"<span style='background:#7c3aed;color:#fff;border-radius:6px;"
+            f"padding:1px 7px;font-size:12px;font-weight:700'>⭐ LOT {lot}</span> ")
+
+
 picks = st.session_state.get("picks")
 if not picks:
     st.info("👆 Appuie sur **Charger** pour lire les ventes du jour.")
@@ -194,7 +203,7 @@ with tab_todo:
             c1, c2, c3 = st.columns([1.1, 4, 1.5])
             _photo(c1, p)
             c2.markdown(
-                f"{p.get('titre','')[:60]}  \n"
+                f"{_lot_badge(p)}{p.get('titre','')[:60]}  \n"
                 f"<span style='color:#888;font-size:12px'>{p.get('vjs','')} · {p.get('taille','')} · {p.get('marque','')}</span>",
                 unsafe_allow_html=True)
             bpath = p.get("bordereau", "")
@@ -217,7 +226,7 @@ with tab_done:
         c1, c2, c3 = st.columns([1.1, 4, 1.5])
         _photo(c1, p)
         c2.markdown(
-            f"✅ {box}  \n{p.get('titre','')[:60]}  \n"
+            f"✅ {box} {_lot_badge(p)}  \n{p.get('titre','')[:60]}  \n"
             f"<span style='color:#888;font-size:12px'>{p.get('vjs','')} · {p.get('taille','')} · {p.get('marque','')}</span>",
             unsafe_allow_html=True)
         if c3.button("↩️ Annuler", key=f"unship_{pid}_{i}", use_container_width=True):
