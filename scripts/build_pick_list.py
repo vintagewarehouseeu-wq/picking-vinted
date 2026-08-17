@@ -144,17 +144,32 @@ def build_catalog(paths):
     return by_vjs
 
 
+def _catalog_sig(paths):
+    """Signature du catalogue basée sur (nom, taille) des fichiers — PAS les dates.
+    (Le dossier est dans Documents/OneDrive qui retouche les dates en continu → un
+    cache basé sur les dates se reconstruit sans arrêt = freeze.)"""
+    return sorted([p.name, p.stat().st_size] for p in paths)
+
+
 def load_catalog():
-    """Catalogue complet (tous les Import_VJS fusionnés) avec cache disque."""
+    """Catalogue complet (tous les fichiers inventaire fusionnés) avec cache disque.
+    Cache invalidé seulement si un fichier est ajouté/retiré/modifié (nom+taille)."""
     paths = find_all_masters()
     if not paths:
         return None, 0, 0
-    newest = max(p.stat().st_mtime for p in paths)
-    if CATALOG_CACHE.exists() and CATALOG_CACHE.stat().st_mtime >= newest:
-        by_vjs = json.loads(CATALOG_CACHE.read_text(encoding="utf-8"))
-    else:
+    sig = _catalog_sig(paths)
+    by_vjs = None
+    if CATALOG_CACHE.exists():
+        try:
+            cached = json.loads(CATALOG_CACHE.read_text(encoding="utf-8"))
+            if isinstance(cached, dict) and cached.get("_sig") == sig:
+                by_vjs = cached["by_vjs"]
+        except Exception:
+            by_vjs = None
+    if by_vjs is None:
         by_vjs = build_catalog(paths)
-        CATALOG_CACHE.write_text(json.dumps(by_vjs, ensure_ascii=False), encoding="utf-8")
+        CATALOG_CACHE.write_text(json.dumps({"_sig": sig, "by_vjs": by_vjs}, ensure_ascii=False),
+                                 encoding="utf-8")
     master = _title_map(by_vjs)
     n_box = sum(1 for r in by_vjs.values() if r["box"])
     return master, len(by_vjs), n_box
