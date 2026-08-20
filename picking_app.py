@@ -22,24 +22,6 @@ st.set_page_config(page_title="Picking", page_icon="📦", layout="centered")
 PP = "#7c3aed"
 
 
-def _gate():
-    """Mot de passe partagé (si configuré dans les secrets). Sans secret → accès libre (local)."""
-    s = CS._secrets()
-    pw = s.get("app_password") if s else None
-    if not pw or st.session_state.get("auth_ok"):
-        return
-    st.markdown("### 🔒 Picking — accès")
-    entered = st.text_input("Mot de passe", type="password")
-    if entered == pw:
-        st.session_state.auth_ok = True
-        st.rerun()
-    elif entered:
-        st.error("Mot de passe incorrect.")
-    st.stop()
-
-
-_gate()
-
 st.markdown(f"<h2 style='margin:0'>📦 Picking du jour</h2>", unsafe_allow_html=True)
 
 # ---------- 1. INVENTAIRE : où tu donnes tes fichiers avec les box ----------
